@@ -83,59 +83,67 @@ export const useCodeEditorStore = create<CodeEditorState>((set, get) => {
       set({ isRunning: true, error: null, output: "" });
 
       try {
-        const runtime = LANGUAGE_CONFIG[language].pistonRuntime;
-        const response = await fetch("https://emkc.org/api/v2/piston/execute", {
+        const judge0LanguageId = LANGUAGE_CONFIG[language].judge0LanguageId;
+        
+        const isCustom = Boolean(process.env.NEXT_PUBLIC_JUDGE0_API_URL);
+        const rapidApiKey = process.env.NEXT_PUBLIC_RAPIDAPI_KEY;
+        
+        let API_URL = "https://judge0-ce.p.rapidapi.com/submissions?base64_encoded=false&wait=true";
+        let headers: Record<string, string> = {
+          "Content-Type": "application/json",
+        };
+
+        if (isCustom) {
+           API_URL = process.env.NEXT_PUBLIC_JUDGE0_API_URL!;
+        } else if (rapidApiKey) {
+           headers["x-rapidapi-host"] = "judge0-ce.p.rapidapi.com";
+           headers["x-rapidapi-key"] = rapidApiKey;
+        } else {
+           API_URL = "http://localhost:2358/submissions?base64_encoded=false&wait=true";
+        }
+
+        const response = await fetch(API_URL, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers,
           body: JSON.stringify({
-            language: runtime.language,
-            version: runtime.version,
-            files: [{ content: code }],
+            language_id: judge0LanguageId,
+            source_code: code,
           }),
         });
 
         const data = await response.json();
+        console.log("data back from judge0:", data);
 
-        console.log("data back from piston:", data);
+        // Handle Rate Limits gracefully
+        if (response.status === 429) {
+          const errorMsg = data?.message || "Rate limit exceeded. Please wait a moment and try again.";
+          set({ error: errorMsg, executionResult: { code, output: "", error: errorMsg } });
+          return;
+        }
 
-        // handle API-level erros
+        // API key or rate limit errors
         if (data.message) {
           set({ error: data.message, executionResult: { code, output: "", error: data.message } });
           return;
         }
 
-        // handle compilation errors
-        if (data.compile && data.compile.code !== 0) {
-          const error = data.compile.stderr || data.compile.output;
-          set({
-            error,
-            executionResult: {
-              code,
-              output: "",
-              error,
-            },
-          });
+        // Compilation error
+        if (data.compile_output) {
+          const error = data.compile_output;
+          set({ error, executionResult: { code, output: "", error } });
           return;
         }
 
-        if (data.run && data.run.code !== 0) {
-          const error = data.run.stderr || data.run.output;
-          set({
-            error,
-            executionResult: {
-              code,
-              output: "",
-              error,
-            },
-          });
-          return;
+        // Runtime error
+        if (data.stderr) {
+           const error = data.stderr;
+           set({ error, executionResult: { code, output: "", error } });
+           return;
         }
 
-        // if we get here, execution was successful
-        const output = data.run.output;
-
+        // Execution successful
+        const output = data.stdout || "";
+        
         set({
           output: output.trim(),
           error: null,
