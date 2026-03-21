@@ -19,7 +19,7 @@ const geistMono = localFont({
 
 export const metadata: Metadata = {
   title: "ScriptSphere",
-  description: "Share and run code snippets",
+  description: "Run, save, and share code",
 };
 
 export default function RootLayout({

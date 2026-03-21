@@ -6,13 +6,15 @@ import { Editor } from "@monaco-editor/react";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { RotateCcwIcon, ShareIcon, TypeIcon } from "lucide-react";
-import { useClerk } from "@clerk/nextjs";
+import { useClerk, useUser } from "@clerk/nextjs";
 import { EditorPanelSkeleton } from "./EditorPanelSkeleton";
 import useMounted from "@/hooks/useMounted";
-import ShareSnippetDialog from "./ShareSnippetDialog";
+import SaveCodeDialog from "./SaveCodeDialog";
+import toast from "react-hot-toast";
 
 function EditorPanel() {
   const clerk = useClerk();
+  const { isSignedIn } = useUser();
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
   const { language, theme, fontSize, editor, setFontSize, setEditor } = useCodeEditorStore();
 
@@ -94,12 +96,18 @@ function EditorPanel() {
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              onClick={() => setIsShareDialogOpen(true)}
+              onClick={() => {
+                if (!isSignedIn) {
+                  toast.error("Please sign in to save code");
+                  return;
+                }
+                setIsShareDialogOpen(true);
+              }}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-lg overflow-hidden bg-gradient-to-r
                from-blue-500 to-blue-600 opacity-90 hover:opacity-100 transition-opacity"
             >
               <ShareIcon className="size-4 text-white" />
-              <span className="text-sm font-medium text-white ">Share</span>
+              <span className="text-sm font-medium text-white ">Save Code</span>
             </motion.button>
           </div>
         </div>
@@ -141,7 +149,7 @@ function EditorPanel() {
           {!clerk.loaded && <EditorPanelSkeleton />}
         </div>
       </div>
-      {isShareDialogOpen && <ShareSnippetDialog onClose={() => setIsShareDialogOpen(false)} />}
+      {isShareDialogOpen && <SaveCodeDialog onClose={() => setIsShareDialogOpen(false)} />}
     </div>
   );
 }

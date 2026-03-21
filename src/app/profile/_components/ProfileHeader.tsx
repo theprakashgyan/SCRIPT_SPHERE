@@ -31,7 +31,7 @@ interface ProfileHeaderProps {
 }
 
 function ProfileHeader({ userStats, userData, user }: ProfileHeaderProps) {
-  const starredSnippets = useQuery(api.snippets.getStarredSnippets);
+  const starredSavedCodes = useQuery(api.savedCodes.getStarredSavedCodes);
   const STATS = [
     {
       label: "Code Executions",
@@ -47,8 +47,8 @@ function ProfileHeader({ userStats, userData, user }: ProfileHeaderProps) {
       },
     },
     {
-      label: "Starred Snippets",
-      value: starredSnippets?.length ?? 0,
+      label: "Starred Saved Codes",
+      value: starredSavedCodes?.length ?? 0,
       icon: Star,
       color: "from-yellow-500 to-orange-500",
       gradient: "group-hover:via-yellow-400",

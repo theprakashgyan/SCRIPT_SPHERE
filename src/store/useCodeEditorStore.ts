@@ -84,27 +84,12 @@ export const useCodeEditorStore = create<CodeEditorState>((set, get) => {
 
       try {
         const judge0LanguageId = LANGUAGE_CONFIG[language].judge0LanguageId;
-        
-        const isCustom = Boolean(process.env.NEXT_PUBLIC_JUDGE0_API_URL);
-        const rapidApiKey = process.env.NEXT_PUBLIC_RAPIDAPI_KEY;
-        
-        let API_URL = "https://judge0-ce.p.rapidapi.com/submissions?base64_encoded=false&wait=true";
-        let headers: Record<string, string> = {
-          "Content-Type": "application/json",
-        };
 
-        if (isCustom) {
-           API_URL = process.env.NEXT_PUBLIC_JUDGE0_API_URL!;
-        } else if (rapidApiKey) {
-           headers["x-rapidapi-host"] = "judge0-ce.p.rapidapi.com";
-           headers["x-rapidapi-key"] = rapidApiKey;
-        } else {
-           API_URL = "http://localhost:2358/submissions?base64_encoded=false&wait=true";
-        }
-
-        const response = await fetch(API_URL, {
+        const response = await fetch("/api/execute", {
           method: "POST",
-          headers,
+          headers: {
+            "Content-Type": "application/json",
+          },
           body: JSON.stringify({
             language_id: judge0LanguageId,
             source_code: code,
@@ -121,7 +106,7 @@ export const useCodeEditorStore = create<CodeEditorState>((set, get) => {
           return;
         }
 
-        // API key or rate limit errors
+        // Any upstream API errors
         if (data.message) {
           set({ error: data.message, executionResult: { code, output: "", error: data.message } });
           return;

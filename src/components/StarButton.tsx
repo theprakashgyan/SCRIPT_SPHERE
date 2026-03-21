@@ -4,16 +4,16 @@ import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Star } from "lucide-react";
 
-function StarButton({ snippetId }: { snippetId: Id<"snippets"> }) {
+function StarButton({ savedCodeId }: { savedCodeId: Id<"savedCodes"> }) {
   const { isSignedIn } = useAuth();
 
-  const isStarred = useQuery(api.snippets.isSnippetStarred, { snippetId });
-  const starCount = useQuery(api.snippets.getSnippetStarCount, { snippetId });
-  const star = useMutation(api.snippets.starSnippet);
+  const isStarred = useQuery(api.savedCodes.isSavedCodeStarred, { savedCodeId });
+  const starCount = useQuery(api.savedCodes.getSavedCodeStarCount, { savedCodeId });
+  const toggleSavedCodeStar = useMutation(api.savedCodes.toggleSavedCodeStar);
 
   const handleStar = async () => {
     if (!isSignedIn) return;
-    await star({ snippetId });
+    await toggleSavedCodeStar({ savedCodeId });
   };
 
   return (

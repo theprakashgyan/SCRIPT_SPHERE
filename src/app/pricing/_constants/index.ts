@@ -19,7 +19,7 @@ export const ENTERPRISE_FEATURES = [
   {
     icon: Boxes,
     label: "Unlimited Storage",
-    desc: "Store unlimited snippets and projects",
+    desc: "Store unlimited saved code and projects",
   },
 ];
 

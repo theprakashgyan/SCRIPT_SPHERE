@@ -10,6 +10,7 @@ export const syncUser = mutation({
   handler: async (ctx, args) => {
     const existingUser = await ctx.db
       .query("users")
+      .withIndex("by_user_id")
       .filter((q) => q.eq(q.field("userId"), args.userId))
       .first();
 
@@ -62,6 +63,27 @@ export const upgradeToPro = mutation({
       proSince: Date.now(),
       lemonSqueezyCustomerId: args.lemonSqueezyCustomerId,
       lemonSqueezyOrderId: args.lemonSqueezyOrderId,
+    });
+
+    return { success: true };
+  },
+});
+export const mockUpgradeToPro = mutation({
+  args: {
+    userId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_user_id")
+      .filter((q) => q.eq(q.field("userId"), args.userId))
+      .first();
+
+    if (!user) throw new Error("User not found");
+
+    await ctx.db.patch(user._id, {
+      isPro: true,
+      proSince: Date.now(),
     });
 
     return { success: true };

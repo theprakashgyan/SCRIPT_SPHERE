@@ -56,19 +56,19 @@ export const getUserStats = query({
       .filter((q) => q.eq(q.field("userId"), args.userId))
       .collect();
 
-    // Get starred snippets
-    const starredSnippets = await ctx.db
+    // Get starred saved codes
+    const starredSavedCodes = await ctx.db
       .query("stars")
       .withIndex("by_user_id")
       .filter((q) => q.eq(q.field("userId"), args.userId))
       .collect();
 
-    // Get all starred snippet details to analyze languages
-    const snippetIds = starredSnippets.map((star) => star.snippetId);
-    const snippetDetails = await Promise.all(snippetIds.map((id) => ctx.db.get(id)));
+    // Get all starred saved code details to analyze languages
+    const savedCodeIds = starredSavedCodes.map((star) => star.savedCodeId);
+    const savedCodeDetails = await Promise.all(savedCodeIds.map((id) => ctx.db.get(id)));
 
     // Calculate most starred language
-    const starredLanguages = snippetDetails.filter(Boolean).reduce(
+    const starredLanguages = savedCodeDetails.filter(Boolean).reduce(
       (acc, curr) => {
         if (curr?.language) {
           acc[curr.language] = (acc[curr.language] || 0) + 1;
